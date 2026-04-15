@@ -1,0 +1,9 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+test.db
+.vs/
+safealert_arquivos.txt
+SAFEALERTIN/

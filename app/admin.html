@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeAlert | Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container-admin">
+        <div class="header-row">
+            <div>
+                <h2>Painel de monitoramento</h2>
+                <p class="subtitle">Lista simples das emergencias registradas.</p>
+            </div>
+            <button class="secondary-button" onclick="logout()">Sair</button>
+        </div>
+
+        <p id="status"></p>
+        <div id="lista-emergencias" class="listagem"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        async function carregarLista() {
+            const status = document.getElementById("status");
+            const lista = document.getElementById("lista-emergencias");
+
+            try {
+                const alertas = await carregarEmergencias();
+                if (!alertas.length) {
+                    status.textContent = "Nenhuma emergencia registrada.";
+                    lista.innerHTML = "";
+                    return;
+                }
+
+                status.textContent = `${alertas.length} emergencia(s) encontrada(s).`;
+                lista.innerHTML = alertas
+                    .map(
+                        (alerta) => `
+                            <div class="card-alerta">
+                                <strong>ID ${alerta.id}</strong><br>
+                                Usuario: ${alerta.usuario_id}<br>
+                                Latitude: ${alerta.latitude}<br>
+                                Longitude: ${alerta.longitude}<br>
+                                Status: ${alerta.status}
+                            </div>
+                        `
+                    )
+                    .join("");
+            } catch (error) {
+                status.textContent = error.message || "Erro ao carregar emergencias.";
+            }
+        }
+
+        if (protegerPagina("admin", "monitor")) {
+            carregarLista();
+            setInterval(carregarLista, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+"""SafeAlert application package."""

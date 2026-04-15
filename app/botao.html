@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeAlert | Botao</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Botao de emergencia</h2>
+        <p class="subtitle">Envie um alerta com sua localizacao atual.</p>
+
+        <button class="botao-emergencia" onclick="enviarEmergencia()">
+            Enviar alerta
+        </button>
+
+        <p id="status"></p>
+        <button class="secondary-button" onclick="logout()">Sair</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        protegerPagina("usuario");
+    </script>
+</body>
+</html>
