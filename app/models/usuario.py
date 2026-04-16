@@ -11,6 +11,7 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True)
     nome = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
+    cpf = Column(String(20), unique=True, nullable=True, index=True)
     telefone = Column(String(20))
     senha = Column(String(255), nullable=False)
     tipo = Column(String(20), nullable=False, default="usuario")

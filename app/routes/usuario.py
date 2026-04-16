@@ -19,9 +19,17 @@ def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
             detail="Ja existe um usuario com este email.",
         )
 
+    cpf_existente = db.query(Usuario).filter(Usuario.cpf == usuario.cpf).first()
+    if cpf_existente:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ja existe um usuario com este CPF.",
+        )
+
     novo = Usuario(
         nome=usuario.nome,
         email=usuario.email,
+        cpf=usuario.cpf,
         telefone=usuario.telefone,
         senha=gerar_hash(usuario.senha),
         tipo=usuario.tipo,

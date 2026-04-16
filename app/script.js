@@ -82,11 +82,12 @@ async function cadastrar() {
     const payload = {
         nome: document.getElementById("nome")?.value?.trim(),
         email: document.getElementById("email")?.value?.trim(),
+        cpf: document.getElementById("cpf")?.value?.trim(),
         telefone: document.getElementById("telefone")?.value?.trim(),
         senha: document.getElementById("senha")?.value ?? "",
     };
 
-    if (!payload.nome || !payload.email || !payload.telefone || !payload.senha) {
+    if (!payload.nome || !payload.email || !payload.cpf || !payload.telefone || !payload.senha) {
         alert("Preencha todos os campos.");
         return;
     }

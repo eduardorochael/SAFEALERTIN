@@ -5,6 +5,7 @@ class UsuarioResponse(BaseModel):
     id: int
     nome: str
     email: str
+    cpf: str | None = None
     telefone: str | None = None
     tipo: str
 
