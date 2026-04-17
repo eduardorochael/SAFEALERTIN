@@ -137,6 +137,21 @@ h1 {
     padding: 14px 16px;
 }
 
+.db-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.db-card {
+    display: grid;
+    gap: 12px;
+}
+
+.db-card h3 {
+    margin: 0;
+}
+
 @media (max-width: 720px) {
     .hero,
     .panel-header {
@@ -146,5 +161,9 @@ h1 {
 
     .card {
         padding: 20px;
+    }
+
+    .db-grid {
+        grid-template-columns: 1fr;
     }
 }

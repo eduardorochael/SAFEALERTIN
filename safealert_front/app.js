@@ -18,6 +18,7 @@ function App() {
     });
     const [status, setStatus] = useState("");
     const [emergencias, setEmergencias] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
 
     async function api(path, options = {}) {
         const response = await fetch(`${API_URL}${path}`, {
@@ -85,15 +86,11 @@ function App() {
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 try {
-                    await api("/emergencia", {
-                        method: "POST",
-                        body: JSON.stringify({
-                            usuario_id: Number(session.usuarioId),
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                        }),
-                    });
-                    setStatus("Emergencia enviada com sucesso.");
+                    await enviarEmergenciaComCoordenadas(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        "Emergencia enviada com sucesso."
+                    );
                     if (session.tipo !== "usuario") {
                         carregarEmergencias();
                     }
@@ -101,8 +98,40 @@ function App() {
                     setStatus(error.message);
                 }
             },
-            () => setStatus("Nao foi possivel obter a localizacao.")
+            () => setStatus("Nao foi possivel obter a localizacao. Use o envio de teste abaixo.")
         );
+    }
+
+    async function enviarEmergenciaComCoordenadas(latitude, longitude, mensagemSucesso) {
+        await api("/emergencia", {
+            method: "POST",
+            body: JSON.stringify({
+                usuario_id: Number(session.usuarioId),
+                latitude,
+                longitude,
+            }),
+        });
+        setStatus(mensagemSucesso);
+    }
+
+    async function enviarEmergenciaTeste() {
+        if (!session.usuarioId) {
+            setStatus("Faca login antes de enviar uma emergencia.");
+            return;
+        }
+
+        try {
+            await enviarEmergenciaComCoordenadas(
+                -23.55052,
+                -46.633308,
+                "Emergencia de teste enviada com coordenadas fixas."
+            );
+            if (session.tipo !== "usuario") {
+                carregarEmergencias();
+            }
+        } catch (error) {
+            setStatus(error.message);
+        }
     }
 
     async function carregarEmergencias() {
@@ -112,6 +141,19 @@ function App() {
         } catch (error) {
             setStatus(error.message);
         }
+    }
+
+    async function carregarUsuarios() {
+        try {
+            const data = await api("/usuarios");
+            setUsuarios(data);
+        } catch (error) {
+            setStatus(error.message);
+        }
+    }
+
+    async function carregarBanco() {
+        await Promise.all([carregarUsuarios(), carregarEmergencias()]);
     }
 
     useEffect(() => {
@@ -144,6 +186,7 @@ function App() {
                     <button className={tab === "cadastro" ? "active" : ""} onClick={() => setTab("cadastro")}>Cadastro</button>
                     <button className={tab === "emergencia" ? "active" : ""} onClick={() => setTab("emergencia")}>Emergencia</button>
                     <button className={tab === "painel" ? "active" : ""} onClick={() => { setTab("painel"); carregarEmergencias(); }}>Painel</button>
+                    <button className={tab === "banco" ? "active" : ""} onClick={() => { setTab("banco"); carregarBanco(); }}>Banco</button>
                 </nav>
 
                 {status ? <div className="status">{status}</div> : null}
@@ -181,6 +224,7 @@ function App() {
                     <section className="panel">
                         <p>Use este teste para validar login e envio de localizacao.</p>
                         <button className="danger" onClick={enviarEmergencia}>Enviar emergencia</button>
+                        <button onClick={enviarEmergenciaTeste}>Enviar emergencia de teste</button>
                     </section>
                 ) : null}
 
@@ -202,6 +246,50 @@ function App() {
                                     <span>Status: {item.status}</span>
                                 </article>
                             )) : <p>Nenhuma emergencia encontrada.</p>}
+                        </div>
+                    </section>
+                ) : null}
+
+                {tab === "banco" ? (
+                    <section className="panel">
+                        <div className="panel-header">
+                            <p>Visualizacao do banco</p>
+                            <button onClick={carregarBanco}>Atualizar</button>
+                        </div>
+
+                        <div className="db-grid">
+                            <div className="db-card">
+                                <h3>Usuarios</h3>
+                                <div className="list">
+                                    {usuarios.length ? usuarios.map((item) => (
+                                        <article className="list-item" key={item.id}>
+                                            <strong>ID {item.id}</strong>
+                                            <span>Nome: {item.nome}</span>
+                                            <span>Email: {item.email}</span>
+                                            <span>CPF: {item.cpf || "Nao informado"}</span>
+                                            <span>Telefone: {item.telefone || "Nao informado"}</span>
+                                            <span>Tipo: {item.tipo}</span>
+                                        </article>
+                                    )) : <p>Nenhum usuario encontrado.</p>}
+                                </div>
+                            </div>
+
+                            <div className="db-card">
+                                <h3>Emergencias</h3>
+                                <div className="list">
+                                    {emergencias.length ? emergencias.map((item) => (
+                                        <article className="list-item" key={item.id}>
+                                            <strong>ID {item.id}</strong>
+                                            <span>Usuario: {item.usuario?.nome || item.usuario_id}</span>
+                                            <span>CPF: {item.usuario?.cpf || "Nao informado"}</span>
+                                            <span>Telefone: {item.usuario?.telefone || "Nao informado"}</span>
+                                            <span>Latitude: {item.latitude}</span>
+                                            <span>Longitude: {item.longitude}</span>
+                                            <span>Status: {item.status}</span>
+                                        </article>
+                                    )) : <p>Nenhuma emergencia encontrada.</p>}
+                                </div>
+                            </div>
                         </div>
                     </section>
                 ) : null}

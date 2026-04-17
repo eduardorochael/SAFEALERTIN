@@ -10,6 +10,11 @@ from app.services.auth import gerar_hash
 router = APIRouter()
 
 
+@router.get("/usuarios", response_model=list[UsuarioResponse])
+def listar_usuarios(db: Session = Depends(get_db)):
+    return db.query(Usuario).order_by(Usuario.id.asc()).all()
+
+
 @router.post("/usuarios", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     usuario_existente = db.query(Usuario).filter(Usuario.email == usuario.email).first()
