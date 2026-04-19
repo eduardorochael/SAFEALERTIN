@@ -4,59 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeAlert | Admin</title>
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
+
     <div class="container-admin">
         <div class="header-row">
             <div>
                 <h2>Painel de monitoramento</h2>
-                <p class="subtitle">Lista simples das emergencias registradas.</p>
+                <p class="subtitle">Mapa + usuário + endereço em tempo real.</p>
             </div>
             <button class="secondary-button" onclick="logout()">Sair</button>
         </div>
 
         <p id="status"></p>
+
+        <!-- MAPA -->
+        <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
+
+        <!-- LISTA -->
         <div id="lista-emergencias" class="listagem"></div>
     </div>
 
+    <!-- Scripts -->
     <script src="script.js"></script>
+
     <script>
+        // 🔥 Inicializa mapa
+        let map = L.map('map').setView([-23.5505, -46.6333], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        let markers = [];
+
+        // 🔎 Buscar endereço
+        async function buscarEndereco(lat, lon) {
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+                );
+                const data = await res.json();
+                return data.display_name || "Endereço não encontrado";
+            } catch {
+                return "Erro ao buscar endereço";
+            }
+        }
+
+        // 🚀 Carregar tudo
         async function carregarLista() {
             const status = document.getElementById("status");
             const lista = document.getElementById("lista-emergencias");
 
             try {
                 const alertas = await carregarEmergencias();
+
+                lista.innerHTML = "";
+
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
+
                 if (!alertas.length) {
                     status.textContent = "Nenhuma emergencia registrada.";
-                    lista.innerHTML = "";
                     return;
                 }
 
                 status.textContent = `${alertas.length} emergencia(s) encontrada(s).`;
-                lista.innerHTML = alertas
-                    .map(
-                        (alerta) => `
-                            <div class="card-alerta">
-                                <strong>ID ${alerta.id}</strong><br>
-                                Usuario: ${alerta.usuario_id}<br>
-                                Latitude: ${alerta.latitude}<br>
-                                Longitude: ${alerta.longitude}<br>
-                                Status: ${alerta.status}
-                            </div>
-                        `
-                    )
-                    .join("");
+
+                let bounds = [];
+
+                for (const alerta of alertas) {
+
+                    // 🔥 dados do usuário
+                    const nome = alerta.usuario?.nome || "Não informado";
+                    const telefone = alerta.usuario?.telefone || "Não informado";
+
+                    // 🔥 endereço
+                    const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
+
+                    // 📋 lista
+                    lista.innerHTML += `
+                        <div class="card-alerta">
+                            <strong>ID ${alerta.id}</strong><br>
+                            👤 Nome: ${nome}<br>
+                            📞 Telefone: ${telefone}<br>
+                            📍 ${endereco}<br>
+                            Status: ${alerta.status}
+                        </div>
+                    `;
+
+                    // 📍 mapa
+                    const marker = L.marker([alerta.latitude, alerta.longitude])
+                        .addTo(map)
+                        .bindPopup(`
+                            <b>🚨 Emergência ID ${alerta.id}</b><br>
+                            👤 ${nome}<br>
+                            📞 ${telefone}<br>
+                            📍 ${endereco}<br>
+                            Status: ${alerta.status}
+                        `);
+
+                    markers.push(marker);
+                    bounds.push([alerta.latitude, alerta.longitude]);
+                }
+
+                // 🎯 centraliza mapa
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds);
+                }
+
             } catch (error) {
                 status.textContent = error.message || "Erro ao carregar emergencias.";
             }
         }
 
+        // 🔐 proteção + auto update
         if (protegerPagina("admin", "monitor")) {
             carregarLista();
             setInterval(carregarLista, 5000);
         }
     </script>
+    <script src="admin.js"></script>
+
 </body>
 </html>
