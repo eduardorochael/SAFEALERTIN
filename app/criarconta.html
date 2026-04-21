@@ -1,50 +1,26 @@
-<div class="container">
-<link rel="stylesheet" href="style.css">
-    <h2>Criar conta</h2>
-    <p class="subtitle">Preencha os dados abaixo para criar um usuario.</p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeAlert | Cadastro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Criar conta</h2>
+        <p class="subtitle">Preencha os dados abaixo para criar um usuario.</p>
 
-    <input id="nome" type="text" placeholder="Nome completo">
-    <input id="email" type="email" placeholder="Email">
-    <input id="cpf" type="text" placeholder="CPF">
-    <input id="telefone" type="text" placeholder="Telefone">
-    <input id="senha" type="password" placeholder="Senha">
+        <input id="nome" placeholder="Nome completo">
+        <input id="email" type="email" placeholder="Email">
+        <input id="cpf" placeholder="CPF">
+        <input id="telefone" placeholder="Telefone">
+        <input id="senha" type="password" placeholder="Senha">
 
-    <button onclick="cadastrar()">Cadastrar</button>
+        <button onclick="cadastrar()">Cadastrar</button>
+        <a href="login.html">Ja tenho conta</a>
+    </div>
 
-    <a href="login.html">Ja tenho conta</a>
-
-</div>
-
-<script>
-async function cadastrar() {
-    const nome = document.getElementById("nome").value;
-    const email = document.getElementById("email").value;
-    const cpf = document.getElementById("cpf").value;
-    const telefone = document.getElementById("telefone").value;
-    const senha = document.getElementById("senha").value;
-
-    try {
-        const res = await fetch("http://127.0.0.1:8000/usuarios", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                nome,
-                email,
-                cpf,
-                telefone,
-                senha
-            })
-        });
-
-        const data = await res.json();
-
-        alert("Usuário criado com sucesso!");
-        window.location.href = "login.html";
-
-    } catch (err) {
-        alert("Erro ao cadastrar");
-    }
-}
-</script>
+    <script src="script.js"></script>
+</body>
+</html>
