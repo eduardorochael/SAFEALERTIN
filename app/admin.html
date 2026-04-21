@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeAlert | Admin</title>
 
     <link rel="stylesheet" href="style.css">
@@ -11,23 +10,19 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
+
 <body>
 
 <div class="container-admin">
     <div class="header-row">
-        <div>
-            <h2>Painel de monitoramento</h2>
-            <p class="subtitle">Clique na ocorrência para ações</p>
-        </div>
+        <h2>Painel de Monitoramento</h2>
         <button onclick="logout()">Sair</button>
     </div>
 
     <p id="status"></p>
 
-    <!-- MAPA -->
-    <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
+    <div id="map" style="height: 400px;"></div>
 
-    <!-- LISTA -->
     <div id="lista-emergencias"></div>
 </div>
 
@@ -55,17 +50,18 @@ async function buscarEndereco(lat, lon) {
     }
 }
 
-// 🚀 ações ao clicar
-function abrirOpcoes(lat, lon, telefone) {
-    const escolha = confirm(
-        "Escolha uma ação:\n\nOK = 📍 Ver rota\nCancelar = 📞 Ligar"
-    );
-
-    if (escolha) {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
-    } else {
-        window.location.href = `tel:${telefone}`;
+// 📞 ligar
+function ligar(telefone) {
+    if (!telefone) {
+        alert("Telefone não disponível");
+        return;
     }
+    window.location.href = `tel:${telefone}`;
+}
+
+// 📍 rota
+function rota(lat, lon) {
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
 }
 
 // 🚨 carregar lista
@@ -77,6 +73,7 @@ async function carregarLista() {
         const alertas = await carregarEmergencias();
 
         lista.innerHTML = "";
+
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
@@ -95,22 +92,45 @@ async function carregarLista() {
             const telefone = alerta.usuario?.telefone || "";
             const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
 
-            // 🧱 CARD CLICÁVEL
+            // 🧱 CARD
             lista.innerHTML += `
-                <div class="card-alerta" style="
+                <div style="
                     background:#1f2a38;
                     padding:15px;
-                    margin-bottom:10px;
+                    margin:10px 0;
                     border-radius:10px;
-                    cursor:pointer;
-                "
-                onclick="abrirOpcoes(${alerta.latitude}, ${alerta.longitude}, '${telefone}')">
+                ">
 
-                    <strong>ID ${alerta.id}</strong><br>
+                    <strong>ID ${alerta.id}</strong><br><br>
+
                     👤 Nome: ${nome}<br>
                     📞 Telefone: ${telefone}<br>
                     📍 ${endereco}<br>
-                    Status: ${alerta.status}
+                    Status: ${alerta.status}<br><br>
+
+                    <button onclick="ligar('${telefone}')" style="
+                        padding:8px 12px;
+                        background:#28a745;
+                        color:white;
+                        border:none;
+                        border-radius:5px;
+                        margin-right:5px;
+                        cursor:pointer;
+                    ">
+                        📞 Ligar
+                    </button>
+
+                    <button onclick="rota(${alerta.latitude}, ${alerta.longitude})" style="
+                        padding:8px 12px;
+                        background:#007bff;
+                        color:white;
+                        border:none;
+                        border-radius:5px;
+                        cursor:pointer;
+                    ">
+                        📍 Rota
+                    </button>
+
                 </div>
             `;
 
@@ -133,6 +153,7 @@ async function carregarLista() {
 
     } catch (error) {
         status.textContent = "Erro ao carregar.";
+        console.error(error);
     }
 }
 
