@@ -29,6 +29,7 @@
 <script src="script.js"></script>
 
 <script>
+// 🔥 MAPA (APENAS AQUI)
 let map = L.map('map').setView([-23.5505, -46.6333], 12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -37,7 +38,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 let markers = [];
 
-// 🔎 endereço
+// 📍 endereço
 async function buscarEndereco(lat, lon) {
     try {
         const res = await fetch(
@@ -52,7 +53,7 @@ async function buscarEndereco(lat, lon) {
 
 // 📞 ligar
 function ligar(telefone) {
-    if (!telefone) {
+    if (!telefone || telefone === "Não informado") {
         alert("Telefone não disponível");
         return;
     }
@@ -89,10 +90,10 @@ async function carregarLista() {
         for (const alerta of alertas) {
 
             const nome = alerta.usuario?.nome || "Não informado";
-            const telefone = alerta.usuario?.telefone || "";
+            const telefone = alerta.usuario?.telefone || "Não informado";
             const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
 
-            // 🧱 CARD
+            // 🧱 CARD COM BOTÕES
             lista.innerHTML += `
                 <div style="
                     background:#1f2a38;
