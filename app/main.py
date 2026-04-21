@@ -9,12 +9,14 @@ from app.database import Base, engine, run_migrations
 from app.routes.auth import router as auth_router
 from app.routes.emergencia import router as emergencia_router
 from app.routes.usuario import router as usuario_router
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-FRONT_DIR = BASE_DIR / "safealert_front"
 
 app = FastAPI(title="SafeAlert API")
-app.mount("/app", StaticFiles(directory="app"), name="app")
+
+app.mount("/app", StaticFiles(directory=BASE_DIR / "app"), name="app")
+app = FastAPI(title="SafeAlert API")
 app.include_router(auth_router)
 app.add_middleware(
     CORSMiddleware,
