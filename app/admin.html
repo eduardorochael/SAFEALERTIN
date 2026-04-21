@@ -13,143 +13,135 @@
 </head>
 <body>
 
-    <div class="container-admin">
-        <div class="header-row">
-            <div>
-                <h2>Painel de monitoramento</h2>
-                <p class="subtitle">Emergências em tempo real</p>
-            </div>
-            <button class="secondary-button" onclick="logout()">Sair</button>
+<div class="container-admin">
+    <div class="header-row">
+        <div>
+            <h2>Painel de monitoramento</h2>
+            <p class="subtitle">Clique na ocorrência para ações</p>
         </div>
-
-        <p id="status"></p>
-
-        <!-- MAPA -->
-        <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
-
-        <!-- LISTA -->
-        <div id="lista-emergencias" class="listagem"></div>
+        <button onclick="logout()">Sair</button>
     </div>
 
-    <script src="script.js"></script>
+    <p id="status"></p>
 
-    <script>
-        let map = L.map('map').setView([-23.5505, -46.6333], 12);
+    <!-- MAPA -->
+    <div id="map" style="height: 400px; margin-bottom: 20px;"></div>
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+    <!-- LISTA -->
+    <div id="lista-emergencias"></div>
+</div>
 
-        let markers = [];
+<script src="script.js"></script>
 
-        async function buscarEndereco(lat, lon) {
-            try {
-                const res = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-                );
-                const data = await res.json();
-                return data.display_name || "Endereço não encontrado";
-            } catch {
-                return "Erro ao buscar endereço";
-            }
+<script>
+let map = L.map('map').setView([-23.5505, -46.6333], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+let markers = [];
+
+// 🔎 endereço
+async function buscarEndereco(lat, lon) {
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = await res.json();
+        return data.display_name || "Endereço não encontrado";
+    } catch {
+        return "Erro ao buscar endereço";
+    }
+}
+
+// 🚀 ações ao clicar
+function abrirOpcoes(lat, lon, telefone) {
+    const escolha = confirm(
+        "Escolha uma ação:\n\nOK = 📍 Ver rota\nCancelar = 📞 Ligar"
+    );
+
+    if (escolha) {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
+    } else {
+        window.location.href = `tel:${telefone}`;
+    }
+}
+
+// 🚨 carregar lista
+async function carregarLista() {
+    const status = document.getElementById("status");
+    const lista = document.getElementById("lista-emergencias");
+
+    try {
+        const alertas = await carregarEmergencias();
+
+        lista.innerHTML = "";
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+
+        if (!alertas.length) {
+            status.textContent = "Nenhuma emergência.";
+            return;
         }
 
-        async function carregarLista() {
-            const status = document.getElementById("status");
-            const lista = document.getElementById("lista-emergencias");
+        status.textContent = `${alertas.length} emergência(s).`;
 
-            try {
-                const alertas = await carregarEmergencias();
+        let bounds = [];
 
-                lista.innerHTML = "";
+        for (const alerta of alertas) {
 
-                markers.forEach(m => map.removeLayer(m));
-                markers = [];
+            const nome = alerta.usuario?.nome || "Não informado";
+            const telefone = alerta.usuario?.telefone || "";
+            const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
 
-                if (!alertas.length) {
-                    status.textContent = "Nenhuma emergência.";
-                    return;
-                }
+            // 🧱 CARD CLICÁVEL
+            lista.innerHTML += `
+                <div class="card-alerta" style="
+                    background:#1f2a38;
+                    padding:15px;
+                    margin-bottom:10px;
+                    border-radius:10px;
+                    cursor:pointer;
+                "
+                onclick="abrirOpcoes(${alerta.latitude}, ${alerta.longitude}, '${telefone}')">
 
-                status.textContent = `${alertas.length} emergência(s).`;
+                    <strong>ID ${alerta.id}</strong><br>
+                    👤 Nome: ${nome}<br>
+                    📞 Telefone: ${telefone}<br>
+                    📍 ${endereco}<br>
+                    Status: ${alerta.status}
+                </div>
+            `;
 
-                let bounds = [];
+            const marker = L.marker([alerta.latitude, alerta.longitude])
+                .addTo(map)
+                .bindPopup(`
+                    <b>🚨 Emergência ${alerta.id}</b><br>
+                    👤 ${nome}<br>
+                    📞 ${telefone}<br>
+                    📍 ${endereco}
+                `);
 
-                for (const alerta of alertas) {
-
-                    const nome = alerta.usuario?.nome || "Não informado";
-                    const telefone = alerta.usuario?.telefone || "";
-
-                    const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
-
-                    lista.innerHTML += `
-                        <div class="card-alerta">
-                            <strong>ID ${alerta.id}</strong><br>
-
-                            👤 Nome: ${nome}<br>
-                            📞 Telefone: ${telefone}<br>
-
-                            <!-- BOTÃO LIGAR -->
-                            <a href="tel:${telefone}" style="
-                                display:inline-block;
-                                margin-top:8px;
-                                padding:6px 10px;
-                                background:#28a745;
-                                color:white;
-                                text-decoration:none;
-                                border-radius:5px;
-                            ">
-                                📞 Ligar
-                            </a>
-
-                            <!-- GOOGLE MAPS -->
-                            <a href="https://www.google.com/maps?q=${alerta.latitude},${alerta.longitude}" target="_blank" style="
-                                display:inline-block;
-                                margin-top:8px;
-                                margin-left:5px;
-                                padding:6px 10px;
-                                background:#007bff;
-                                color:white;
-                                text-decoration:none;
-                                border-radius:5px;
-                            ">
-                                📍 Abrir mapa
-                            </a>
-
-                            <br><br>
-
-                            📍 ${endereco}<br>
-                            Status: ${alerta.status}
-                        </div>
-                    `;
-
-                    const marker = L.marker([alerta.latitude, alerta.longitude])
-                        .addTo(map)
-                        .bindPopup(`
-                            <b>🚨 Emergência ${alerta.id}</b><br>
-                            👤 ${nome}<br>
-                            📞 ${telefone}<br>
-                            📍 ${endereco}
-                        `);
-
-                    markers.push(marker);
-                    bounds.push([alerta.latitude, alerta.longitude]);
-                }
-
-                if (bounds.length > 0) {
-                    map.fitBounds(bounds);
-                }
-
-            } catch (error) {
-                status.textContent = "Erro ao carregar.";
-            }
+            markers.push(marker);
+            bounds.push([alerta.latitude, alerta.longitude]);
         }
 
-        if (protegerPagina("admin", "monitor")) {
-            carregarLista();
-            setInterval(carregarLista, 5000);
+        if (bounds.length > 0) {
+            map.fitBounds(bounds);
         }
-    </script>
+
+    } catch (error) {
+        status.textContent = "Erro ao carregar.";
+    }
+}
+
+// 🔐 proteção
+if (protegerPagina("admin", "monitor")) {
+    carregarLista();
+    setInterval(carregarLista, 5000);
+}
+</script>
 
 </body>
 </html>
