@@ -8,6 +8,9 @@ from app.routes.usuario import router as usuario_router
 from app.routes.emergencia import router as emergencia_router
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+from app.database import Base, engine
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
