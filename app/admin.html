@@ -14,23 +14,34 @@
 <body>
 
 <div class="container-admin">
+
     <div class="header-row">
         <h2>Painel de Monitoramento</h2>
         <button onclick="logout()">Sair</button>
     </div>
 
-    <p id="status"></p>
+    <div class="layout">
 
-    <div id="map" style="height: 400px;"></div>
+        <!-- ESQUERDA -->
+        <div class="lista">
+            <p id="status"></p>
+            <div id="lista-emergencias"></div>
+        </div>
 
-    <div id="lista-emergencias"></div>
+        <!-- DIREITA -->
+        <div class="mapa-box">
+            <div id="map"></div>
+        </div>
+
+    </div>
+
 </div>
 
 <script src="script.js"></script>
 
 <script>
-// 🔥 MAPA (APENAS AQUI)
-let map = L.map('map').setView([-23.5505, -46.6333], 12);
+// 🔥 MAPA
+let map = L.map('map').setView([-23.5505, -46.6333], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
@@ -74,7 +85,6 @@ async function carregarLista() {
         const alertas = await carregarEmergencias();
 
         lista.innerHTML = "";
-
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
@@ -93,45 +103,22 @@ async function carregarLista() {
             const telefone = alerta.usuario?.telefone || "Não informado";
             const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
 
-            // 🧱 CARD COM BOTÕES
             lista.innerHTML += `
-                <div style="
-                    background:#1f2a38;
-                    padding:15px;
-                    margin:10px 0;
-                    border-radius:10px;
-                ">
+                <div class="card-alerta">
+                    <strong>ID ${alerta.id}</strong><br>
 
-                    <strong>ID ${alerta.id}</strong><br><br>
-
-                    👤 Nome: ${nome}<br>
-                    📞 Telefone: ${telefone}<br>
+                    👤 ${nome}<br>
+                    📞 ${telefone}<br>
                     📍 ${endereco}<br>
-                    Status: ${alerta.status}<br><br>
+                    Status: ${alerta.status}<br>
 
-                    <button onclick="ligar('${telefone}')" style="
-                        padding:8px 12px;
-                        background:#28a745;
-                        color:white;
-                        border:none;
-                        border-radius:5px;
-                        margin-right:5px;
-                        cursor:pointer;
-                    ">
+                    <button class="btn-ligar" onclick="ligar('${telefone}')">
                         📞 Ligar
                     </button>
 
-                    <button onclick="rota(${alerta.latitude}, ${alerta.longitude})" style="
-                        padding:8px 12px;
-                        background:#007bff;
-                        color:white;
-                        border:none;
-                        border-radius:5px;
-                        cursor:pointer;
-                    ">
+                    <button class="btn-rota" onclick="rota(${alerta.latitude}, ${alerta.longitude})">
                         📍 Rota
                     </button>
-
                 </div>
             `;
 
