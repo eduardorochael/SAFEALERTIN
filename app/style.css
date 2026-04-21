@@ -114,23 +114,23 @@ a {
 }
 .layout-admin {
     display: flex;
-    gap: 20px;
+    gap: 10px;
 }
 
 /* 📋 OCORRÊNCIAS (ESQUERDA) */
 .lista-ocorrencias {
     width: 25%;
-    max-height: 600px;
+    max-height: 300px;
     overflow-y: auto;
 }
 
 /* 🗺️ MAPA (DIREITA) */
 .mapa-container {
-    width: 65%;
+    width: 68%;
 }
 
 #map {
-    width: 400%;
-    height: 500px;
+    width: 318%;
+    height: 550px;
     border-radius: 0; 
 }
