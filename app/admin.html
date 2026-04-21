@@ -17,7 +17,7 @@
         <div class="header-row">
             <div>
                 <h2>Painel de monitoramento</h2>
-                <p class="subtitle">Mapa + usuário + endereço em tempo real.</p>
+                <p class="subtitle">Emergências em tempo real</p>
             </div>
             <button class="secondary-button" onclick="logout()">Sair</button>
         </div>
@@ -31,11 +31,9 @@
         <div id="lista-emergencias" class="listagem"></div>
     </div>
 
-    <!-- Scripts -->
     <script src="script.js"></script>
 
     <script>
-        // 🔥 Inicializa mapa
         let map = L.map('map').setView([-23.5505, -46.6333], 12);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -44,7 +42,6 @@
 
         let markers = [];
 
-        // 🔎 Buscar endereço
         async function buscarEndereco(lat, lon) {
             try {
                 const res = await fetch(
@@ -57,7 +54,6 @@
             }
         }
 
-        // 🚀 Carregar tudo
         async function carregarLista() {
             const status = document.getElementById("status");
             const lista = document.getElementById("lista-emergencias");
@@ -71,66 +67,89 @@
                 markers = [];
 
                 if (!alertas.length) {
-                    status.textContent = "Nenhuma emergencia registrada.";
+                    status.textContent = "Nenhuma emergência.";
                     return;
                 }
 
-                status.textContent = `${alertas.length} emergencia(s) encontrada(s).`;
+                status.textContent = `${alertas.length} emergência(s).`;
 
                 let bounds = [];
 
                 for (const alerta of alertas) {
 
-                    // 🔥 dados do usuário
                     const nome = alerta.usuario?.nome || "Não informado";
-                    const telefone = alerta.usuario?.telefone || "Não informado";
+                    const telefone = alerta.usuario?.telefone || "";
 
-                    // 🔥 endereço
                     const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
 
-                    // 📋 lista
                     lista.innerHTML += `
                         <div class="card-alerta">
                             <strong>ID ${alerta.id}</strong><br>
+
                             👤 Nome: ${nome}<br>
                             📞 Telefone: ${telefone}<br>
+
+                            <!-- BOTÃO LIGAR -->
+                            <a href="tel:${telefone}" style="
+                                display:inline-block;
+                                margin-top:8px;
+                                padding:6px 10px;
+                                background:#28a745;
+                                color:white;
+                                text-decoration:none;
+                                border-radius:5px;
+                            ">
+                                📞 Ligar
+                            </a>
+
+                            <!-- GOOGLE MAPS -->
+                            <a href="https://www.google.com/maps?q=${alerta.latitude},${alerta.longitude}" target="_blank" style="
+                                display:inline-block;
+                                margin-top:8px;
+                                margin-left:5px;
+                                padding:6px 10px;
+                                background:#007bff;
+                                color:white;
+                                text-decoration:none;
+                                border-radius:5px;
+                            ">
+                                📍 Abrir mapa
+                            </a>
+
+                            <br><br>
+
                             📍 ${endereco}<br>
                             Status: ${alerta.status}
                         </div>
                     `;
 
-                    // 📍 mapa
                     const marker = L.marker([alerta.latitude, alerta.longitude])
                         .addTo(map)
                         .bindPopup(`
-                            <b>🚨 Emergência ID ${alerta.id}</b><br>
+                            <b>🚨 Emergência ${alerta.id}</b><br>
                             👤 ${nome}<br>
                             📞 ${telefone}<br>
-                            📍 ${endereco}<br>
-                            Status: ${alerta.status}
+                            📍 ${endereco}
                         `);
 
                     markers.push(marker);
                     bounds.push([alerta.latitude, alerta.longitude]);
                 }
 
-                // 🎯 centraliza mapa
                 if (bounds.length > 0) {
                     map.fitBounds(bounds);
                 }
 
             } catch (error) {
-                status.textContent = error.message || "Erro ao carregar emergencias.";
+                status.textContent = "Erro ao carregar.";
             }
         }
 
-        // 🔐 proteção + auto update
         if (protegerPagina("admin", "monitor")) {
             carregarLista();
             setInterval(carregarLista, 5000);
         }
     </script>
-    <script src="admin.js"></script>
 
 </body>
 </html>
