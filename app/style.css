@@ -119,18 +119,19 @@ a {
 
 /* 📋 OCORRÊNCIAS (ESQUERDA) */
 .lista-ocorrencias {
-    width: 25%;
-    max-height: 300px;
+    flex: 1;
+    max-width: 320px;
+    max-height: 550px;
     overflow-y: auto;
 }
 
-/* 🗺️ MAPA (DIREITA) */
+/* 🗺️ MAPA */
 .mapa-container {
-    width: 68%;
+    flex: 3;
 }
 
 #map {
-    width: 318%;
+    width: 100%;
     height: 550px;
-    border-radius: 0; 
+    border-radius: 10px;
 }
