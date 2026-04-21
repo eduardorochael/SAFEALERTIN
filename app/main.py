@@ -14,7 +14,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 FRONT_DIR = BASE_DIR / "safealert_front"
 
 app = FastAPI(title="SafeAlert API")
-
+app.mount("/app", StaticFiles(directory="app"), name="app")
+app.include_router(auth_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
