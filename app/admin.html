@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>SafeAlert | Admin</title>
+<meta charset="UTF-8">
+<title>SafeAlert - Admin</title>
 
-    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <link rel="icon" href="static/img/fundo.png">
 </head>
+
 <body>
 
 <div class="container-admin">
@@ -25,8 +25,8 @@
 
     <div class="layout-admin">
 
-        <!-- 📋 OCORRÊNCIAS -->
-        <div class="lista-ocorrencias" id="lista-emergencias"></div>
+        <!-- 📋 LISTA -->
+        <div id="lista-emergencias" class="lista-ocorrencias"></div>
 
         <!-- 🗺️ MAPA -->
         <div class="mapa-container">
@@ -38,8 +38,10 @@
 </div>
 
 <script>
-// 🔥 MAPA
-let map = L.map('map').setView([-23.5505, -46.6333], 12);
+const API = "https://safealertin.onrender.com";
+
+// 🗺️ MAPA
+const map = L.map('map').setView([-23.5505, -46.6333], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
@@ -47,7 +49,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 let markers = [];
 
-// 📍 endereço
+// 📍 buscar endereço
 async function buscarEndereco(lat, lon) {
     try {
         const res = await fetch(
@@ -60,84 +62,105 @@ async function buscarEndereco(lat, lon) {
     }
 }
 
-// 🚀 carregar dados
+// 📡 pegar emergências
+async function carregarEmergencias() {
+    const res = await fetch(`${API}/emergencias`);
+    return await res.json();
+}
+
+// ✅ marcar como atendida
+async function atender(id) {
+    await fetch(`${API}/emergencias/${id}/atender`, {
+        method: "PUT"
+    });
+
+    alert("Ocorrência atendida!");
+    carregarLista();
+}
+
+// 🔥 carregar tudo
 async function carregarLista() {
     const lista = document.getElementById("lista-emergencias");
     const status = document.getElementById("status");
 
     try {
-        const res = await fetch("/emergencias"); // 🔥 IMPORTANTE
-        const alertas = await res.json();
+        const dados = await carregarEmergencias();
 
         lista.innerHTML = "";
 
-        // limpa mapa
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
-        if (!alertas.length) {
+        if (!dados.length) {
             status.textContent = "Nenhuma emergência.";
             return;
         }
 
-        status.textContent = `${alertas.length} emergência(s).`;
+        status.textContent = `${dados.length} emergência(s).`;
 
         let bounds = [];
 
-        for (const alerta of alertas) {
+        for (const e of dados) {
 
-            const nome = alerta.usuario?.nome || "Não informado";
-            const telefone = alerta.usuario?.telefone || "Não informado";
+            const nome = e.usuario?.nome || "Não informado";
+            const tel = e.usuario?.telefone || "Não informado";
 
-            const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
+            const endereco = await buscarEndereco(e.latitude, e.longitude);
 
-            // 📋 CARD
             lista.innerHTML += `
                 <div class="card-alerta">
-                    <strong>ID ${alerta.id}</strong><br>
+                    <strong>ID ${e.id}</strong><br>
                     👤 ${nome}<br>
-                    📞 ${telefone}<br>
+                    📞 ${tel}<br>
                     📍 ${endereco}<br>
-                    Status: ${alerta.status}
+                    Status: ${e.status}<br>
 
-                    <a class="btn-ligar" href="tel:${telefone}">📞 Ligar</a>
+                    <a class="btn-ligar" href="tel:${tel}">📞 Ligar</a>
 
                     <a class="btn-rota" target="_blank"
-                        href="https://www.google.com/maps?q=${alerta.latitude},${alerta.longitude}">
-                        📍 Rota
+                       href="https://www.google.com/maps?q=${e.latitude},${e.longitude}">
+                       📍 Rota
                     </a>
+
+                    <button onclick="atender(${e.id})">
+                        ✅ Atendida
+                    </button>
                 </div>
             `;
 
-            // 🗺️ marcador
-            const marker = L.marker([alerta.latitude, alerta.longitude])
+            const marker = L.marker([e.latitude, e.longitude])
                 .addTo(map)
                 .bindPopup(`
-                    <b>${nome}</b><br>
-                    📞 ${telefone}<br>
-                    📍 ${endereco}
+                    <b>🚨 ID ${e.id}</b><br>
+                    ${nome}<br>
+                    ${tel}<br>
+                    ${endereco}<br>
+                    Status: ${e.status}
                 `);
 
             markers.push(marker);
-            bounds.push([alerta.latitude, alerta.longitude]);
+            bounds.push([e.latitude, e.longitude]);
         }
 
-        if (bounds.length > 0) {
+        if (bounds.length) {
             map.fitBounds(bounds);
         }
 
-    } catch (error) {
+    } catch (err) {
         status.textContent = "Erro ao carregar.";
-        console.error(error);
     }
 }
 
-// 🔄 atualizar automático
+// logout simples
+function logout() {
+    window.location.href = "/app/login.html";
+}
+
+// iniciar
 carregarLista();
 setInterval(carregarLista, 5000);
-</script>
 
-<script src="script.js"></script>
+</script>
 
 </body>
 </html>
