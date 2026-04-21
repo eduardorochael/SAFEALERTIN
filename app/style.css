@@ -112,3 +112,24 @@ a {
     color: #ffd166;
     text-decoration: none;
 }
+.layout-admin {
+    display: flex;
+    gap: 20px;
+}
+
+/* 📋 OCORRÊNCIAS (ESQUERDA) */
+.lista-ocorrencias {
+    width: 35%;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* 🗺️ MAPA (DIREITA) */
+.mapa-container {
+    width: 65%;
+}
+
+#map {
+    height: 600px;
+    border-radius: 14px;
+}

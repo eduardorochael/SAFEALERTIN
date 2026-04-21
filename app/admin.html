@@ -9,8 +9,9 @@
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-</head>
 
+    <link rel="icon" href="static/img/fundo.png">
+</head>
 <body>
 
 <div class="container-admin">
@@ -20,16 +21,15 @@
         <button onclick="logout()">Sair</button>
     </div>
 
-    <div class="layout">
+    <p id="status"></p>
 
-        <!-- ESQUERDA -->
-        <div class="lista">
-            <p id="status"></p>
-            <div id="lista-emergencias"></div>
-        </div>
+    <div class="layout-admin">
 
-        <!-- DIREITA -->
-        <div class="mapa-box">
+        <!-- 📋 OCORRÊNCIAS -->
+        <div class="lista-ocorrencias" id="lista-emergencias"></div>
+
+        <!-- 🗺️ MAPA -->
+        <div class="mapa-container">
             <div id="map"></div>
         </div>
 
@@ -37,11 +37,9 @@
 
 </div>
 
-<script src="script.js"></script>
-
 <script>
 // 🔥 MAPA
-let map = L.map('map').setView([-23.5505, -46.6333], 10);
+let map = L.map('map').setView([-23.5505, -46.6333], 12);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
@@ -62,29 +60,18 @@ async function buscarEndereco(lat, lon) {
     }
 }
 
-// 📞 ligar
-function ligar(telefone) {
-    if (!telefone || telefone === "Não informado") {
-        alert("Telefone não disponível");
-        return;
-    }
-    window.location.href = `tel:${telefone}`;
-}
-
-// 📍 rota
-function rota(lat, lon) {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`);
-}
-
-// 🚨 carregar lista
+// 🚀 carregar dados
 async function carregarLista() {
-    const status = document.getElementById("status");
     const lista = document.getElementById("lista-emergencias");
+    const status = document.getElementById("status");
 
     try {
-        const alertas = await carregarEmergencias();
+        const res = await fetch("/emergencias"); // 🔥 IMPORTANTE
+        const alertas = await res.json();
 
         lista.innerHTML = "";
+
+        // limpa mapa
         markers.forEach(m => map.removeLayer(m));
         markers = [];
 
@@ -101,32 +88,32 @@ async function carregarLista() {
 
             const nome = alerta.usuario?.nome || "Não informado";
             const telefone = alerta.usuario?.telefone || "Não informado";
+
             const endereco = await buscarEndereco(alerta.latitude, alerta.longitude);
 
+            // 📋 CARD
             lista.innerHTML += `
                 <div class="card-alerta">
                     <strong>ID ${alerta.id}</strong><br>
-
                     👤 ${nome}<br>
                     📞 ${telefone}<br>
                     📍 ${endereco}<br>
-                    Status: ${alerta.status}<br>
+                    Status: ${alerta.status}
 
-                    <button class="btn-ligar" onclick="ligar('${telefone}')">
-                        📞 Ligar
-                    </button>
+                    <a class="btn-ligar" href="tel:${telefone}">📞 Ligar</a>
 
-                    <button class="btn-rota" onclick="rota(${alerta.latitude}, ${alerta.longitude})">
+                    <a class="btn-rota" target="_blank"
+                        href="https://www.google.com/maps?q=${alerta.latitude},${alerta.longitude}">
                         📍 Rota
-                    </button>
+                    </a>
                 </div>
             `;
 
+            // 🗺️ marcador
             const marker = L.marker([alerta.latitude, alerta.longitude])
                 .addTo(map)
                 .bindPopup(`
-                    <b>🚨 Emergência ${alerta.id}</b><br>
-                    👤 ${nome}<br>
+                    <b>${nome}</b><br>
                     📞 ${telefone}<br>
                     📍 ${endereco}
                 `);
@@ -145,12 +132,12 @@ async function carregarLista() {
     }
 }
 
-// 🔐 proteção
-if (protegerPagina("admin", "monitor")) {
-    carregarLista();
-    setInterval(carregarLista, 5000);
-}
+// 🔄 atualizar automático
+carregarLista();
+setInterval(carregarLista, 5000);
 </script>
+
+<script src="script.js"></script>
 
 </body>
 </html>
