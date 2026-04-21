@@ -1,9 +1,3 @@
-// 🔥 Inicializa mapa
-let map =
-
-L.tileLayer();
-
-let markers = [];
 
 // 🚀 Buscar endereço (lat/lon → endereço)
 async function buscarEndereco(lat, lon) {
