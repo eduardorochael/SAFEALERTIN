@@ -1,9 +1,7 @@
 // 🔥 Inicializa mapa
 let map =
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-}).addTo(map);
+L.tileLayer();
 
 let markers = [];
 
